@@ -116,8 +116,8 @@ def ask_json(prompt, max_tokens=4096, temperature=0.3):
             _failed_calls = 0
             return out
         except Exception as ex:  # noqa: BLE001
-            log(f"  AI returned unreadable output ({ex.__class__.__name__})")
-            return None
+            log(f"  AI returned unreadable output ({ex.__class__.__name__}), asking again")
+            continue
 
     if not _models:
         _disable("no Gemini model available for this key")

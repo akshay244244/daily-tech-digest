@@ -98,9 +98,10 @@ def curate(cands):
 
     if ai.available() and trimmed:
         log(f"AI curation over {len(trimmed)} candidates ({ai.model()})...")
-        res = ai.ask_json(_prompt(trimmed), max_tokens=6000)
+        res = ai.ask_json(_prompt(trimmed), max_tokens=8192)
         stories = _from_ai(res, by_id)
         if stories:
+            stories = _top_up(stories, trimmed)
             top_ids = [i for i in (res.get("top") or []) if i in {s["id"] for s in stories}]
             top = _fill_top(stories, top_ids)
             log(f"AI picked {len(stories)} stories")
@@ -130,6 +131,28 @@ def _from_ai(res, by_id):
             used.add(c["id"])
             stories.append(_story(c, s["slug"], rank, _clean_summary(item.get("summary"), _shorten_title(c["title"]))))
     return stories if len(stories) >= 5 else None
+
+
+MIN_PER_SECTION = 4
+
+
+def _top_up(stories, trimmed):
+    """If the AI chose very few stories for a section, add the most relevant leftovers."""
+    used = {s["id"] for s in stories}
+    out = list(stories)
+    for sec in config.SECTIONS:
+        have = [s for s in out if s["category"] == sec["slug"]]
+        if len(have) >= MIN_PER_SECTION:
+            continue
+        pool = [c for c in trimmed if c["category"] == sec["slug"] and c["id"] not in used
+                and relevance(c) >= 3
+                and not (sec["slug"] == "creative-tools" and is_competitor_story(c["title"]))]
+        for c in pool[: MIN_PER_SECTION - len(have)]:
+            used.add(c["id"])
+            out.append(_story(c, sec["slug"], len(have) + 1, _shorten_title(c["title"])))
+            have.append(c)
+    order = {s["slug"]: i for i, s in enumerate(config.SECTIONS)}
+    return sorted(out, key=lambda s: (order[s["category"]], s["rank"]))
 
 
 def _fallback(cands):
