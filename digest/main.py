@@ -18,12 +18,12 @@ from .store import load_digest, rebuild_index, recent_stories, save_digest
 from .util import ist_date, last_n_dates, log, now_ist, today_ist
 
 
-def make_digest(date, cands, source_count, trigger):
+def make_digest(date, cands, source_count, trigger, ai_summaries=True):
     stories, highlights, by = curate(cands)
     # highlights hold urls; enrich may swap Google News links for the real ones
     id_by_url = {s["url"]: s["id"] for s in stories}
     top_ids = [id_by_url[u] for u in highlights if u in id_by_url]
-    stories = enrich(stories, date)
+    stories = enrich(stories, date, ai_summaries)
     url_by_id = {s["id"]: s["url"] for s in stories}
     highlights = [url_by_id[i] for i in top_ids]
     for s in stories:
@@ -69,13 +69,14 @@ def run_recap(send_email=True):
 
 def run_backfill():
     cands, nsrc = fetch_all(24 * 7 + 6)
-    dates = sorted(last_n_dates(7))
-    for date in dates:
+    today = today_ist()
+    for date in last_n_dates(7):  # today first, so it gets the AI budget
         day = [c for c in cands if ist_date(datetime.fromisoformat(c["published"])) == date]
         if not day:
             log(f"{date}: no candidates, skipping")
             continue
-        make_digest(date, day, nsrc, "backfill")
+        # AI headlines for every day, AI detailed summaries only for today
+        make_digest(date, day, nsrc, "backfill", ai_summaries=(date == today))
     build_quiz()
     build_recap()
     finish()
@@ -94,7 +95,7 @@ def main():
     p.add_argument("--trigger", default="scheduled")
     p.add_argument("--no-email", action="store_true")
     a = p.parse_args()
-    log(f"Task={a.task} AI={'on (' + config.GEMINI_MODEL + ')' if ai.available() else 'off (fallback mode)'}")
+    log(f"Task={a.task} AI={'on (' + ai.model() + ')' if ai.available() else 'off (fallback mode)'}")
     if a.task == "daily":
         run_daily(a.trigger, not a.no_email)
     elif a.task == "catchup":

@@ -5,13 +5,13 @@ from . import ai, config
 from .fetch import is_competitor_story
 from .util import log
 
-PER_SECTION_CANDIDATES = 60
+PER_SECTION_CANDIDATES = 30
 
 
 def _prompt(cands):
     secs = "\n".join(f'- "{s["slug"]}" ({s["name"]}): {s["brief"]}' for s in config.SECTIONS)
     lines = "\n".join(
-        f'{c["id"]} | {c["category"]} | {c["source"]} | {c["title"]} | {c["snippet"][:160]}'
+        f'{c["id"]} | {c["category"]} | {c["source"]} | {c["title"]} | {c["snippet"][:100]}'
         for c in cands
     )
     return f"""You are the editor of "Daily Tech Digest", a daily news digest for one reader: a tech product manager in India.
@@ -64,8 +64,8 @@ def curate(cands):
         trimmed += (feeds + gn)[:PER_SECTION_CANDIDATES]
 
     if ai.available() and trimmed:
-        log(f"AI curation over {len(trimmed)} candidates ({config.GEMINI_MODEL})...")
-        res = ai.ask_json(_prompt(trimmed), max_tokens=8192)
+        log(f"AI curation over {len(trimmed)} candidates ({ai.model()})...")
+        res = ai.ask_json(_prompt(trimmed), max_tokens=6000)
         stories = _from_ai(res, by_id)
         if stories:
             top_ids = [i for i in (res.get("top") or []) if i in {s["id"] for s in stories}]

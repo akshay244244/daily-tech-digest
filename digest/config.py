@@ -105,7 +105,8 @@ COMPETITORS = ["canva", "affinity", "capture one", "figma", "coreldraw", "corel"
 
 # AI (Gemini free tier). Empty key => everything uses non-AI fallbacks.
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "").strip() or "gemini-flash-latest"
+GEMINI_MODEL_SET = bool(os.environ.get("GEMINI_MODEL", "").strip())
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "").strip() or "gemini-flash-lite-latest"
 
 # Email (Gmail SMTP with an App Password). Empty => email skipped.
 GMAIL_USER = os.environ.get("GMAIL_USER", "").strip()

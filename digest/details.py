@@ -13,7 +13,7 @@ def _detail_path(sid):
     return data_path("stories", f"{sid}.json")
 
 
-def enrich(stories, date):
+def enrich(stories, date, ai_summaries=True):
     """Mutates stories (url, image). Writes site/data/stories/<id>.json for each."""
     todo = []
     for s in stories:
@@ -51,7 +51,7 @@ def enrich(stories, date):
         }
         new_details.append(detail)
 
-    if ai.available() and new_details:
+    if ai_summaries and ai.available() and new_details:
         _ai_summaries([d for d in new_details if len(d["text"]) > 400])
 
     for d in new_details:
