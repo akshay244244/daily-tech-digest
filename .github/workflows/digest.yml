@@ -1,0 +1,95 @@
+name: Daily Tech Digest
+
+on:
+  schedule:
+    - cron: "0 1 * * *"     # 06:30 IST every day  -> daily digest + email
+    - cron: "30 3 * * *"    # 09:00 IST every day  -> catch-up if 06:30 run was missed
+    - cron: "0 13 * * 0"    # 18:30 IST on Sunday  -> weekly recap + email
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "What to run"
+        type: choice
+        options: [daily, recap, backfill]
+        default: daily
+      send_email:
+        description: "Send the email"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: digest
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Kolkata
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Pick the task
+        id: pick
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TASK="${{ inputs.task }}"
+            TRIGGER="manual"
+            if [ "${{ inputs.send_email }}" = "true" ]; then EMAIL=""; else EMAIL="--no-email"; fi
+          else
+            case "${{ github.event.schedule }}" in
+              "30 3 * * *") TASK="catchup" ;;
+              "0 13 * * 0") TASK="recap" ;;
+              *)            TASK="daily" ;;
+            esac
+            TRIGGER="scheduled"
+            EMAIL=""
+          fi
+          [ "$TASK" = "backfill" ] && EMAIL=""
+          echo "cmd=$TASK --trigger $TRIGGER $EMAIL" >> "$GITHUB_OUTPUT"
+          echo "Running: $TASK ($TRIGGER) $EMAIL"
+
+      - name: Build the digest
+        run: python -m digest.main ${{ steps.pick.outputs.cmd }}
+
+      - name: Save data to the repo
+        run: |
+          git config user.name "digest-bot"
+          git config user.email "digest-bot@users.noreply.github.com"
+          git add -A site/data
+          if git diff --cached --quiet; then
+            echo "No data changes"
+          else
+            git commit -m "Digest update $(date +'%Y-%m-%d %H:%M IST')"
+            git pull --rebase --autostash || true
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
