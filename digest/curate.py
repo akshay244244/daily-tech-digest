@@ -7,6 +7,39 @@ from .util import log
 
 PER_SECTION_CANDIDATES = 30
 
+# Used when ranking without AI (and to choose what the AI sees).
+SECTION_WORDS = {
+    "frontier-ai": r"\b(AI|A\.I\.|LLMs?|GPT[- ]?\w*|OpenAI|Anthropic|Claude|Gemini|DeepMind|Llama|Mistral|DeepSeek|Qwen|Grok|xAI|Copilot|chatbots?|agents?|agentic|models?|neural|machine learning|inference|reasoning|benchmark|research|paper)\b",
+    "global-tech": r"\b(Apple|Microsoft|Amazon|AWS|Google|Alphabet|Nvidia|Meta|Tesla|Samsung|Intel|AMD|TSMC|Qualcomm|Netflix|Spotify|chips?|semiconductors?|antitrust|regulat\w*|lawsuit|earnings|revenue|acqui\w*|launch\w*|EU|FTC|DOJ|data centers?|iPhone|Android|Windows)\b",
+    "india-startups": r"\b(rais\w*|funding|fund|IPO|DRHP|layoffs?|startups?|SEBI|RBI|NPCI|UPI|crore|lakh|valuation|acqui\w*|Series [A-F]|seed|unicorn|fintech|edtech|quick commerce|Zepto|Swiggy|Zomato|Blinkit|Flipkart|Paytm|PhonePe|Razorpay|Ola|Meesho|Groww|Zerodha|launch\w*|policy)\b",
+    "product-craft": r"\b(product|PMs?|growth|strateg\w*|framework|launch\w*|features?|redesign\w*|users|retention|onboarding|pricing|roadmap|lessons?|metrics?|experiment\w*|design)\b",
+    "creative-tools": r"\b(Adobe|Photoshop|Lightroom|Firefly|Premiere|Illustrator|After Effects|Generative Fill|cameras?|lens(es)?|Sony|Canon|Nikon|Fujifilm|Leica|Panasonic|DJI|GoPro|Midjourney|Stable Diffusion|Flux|image generat\w*|AI image|photo\w*|edit\w*|creators?)\b",
+}
+JUNK = (r"(\bdeals?\b|discount|% off|\bsale\b|save \$|coupon|giveaway|days left|last chance|"
+        r"register now|tickets|webinar|sponsored|horoscope|best .{0,40}(to buy|deals|for \d{4})|"
+        r"gift guide|how to watch|livestream|wordle|crossword|weekly roundup|this week in|newsletter:)")
+
+
+def relevance(c):
+    """Rough non-AI importance score for a candidate within its section."""
+    t = c["title"]
+    hits = len(re.findall(SECTION_WORDS.get(c["category"], r"$^"), t, re.I))
+    score = min(hits, 3) * 2
+    if re.search(JUNK, t, re.I):
+        score -= 100
+    if c["source"].startswith("Hacker News") and hits == 0:
+        score -= 100           # off-topic HN front page items
+    if c["source"].startswith("Reddit"):
+        score -= 1             # forum chatter ranks below news
+    if re.search(r"\d", t):
+        score += 1             # numbers usually mean concrete news
+    if c.get("via") == "feed":
+        score += 1             # original publisher over aggregator
+    if t.endswith("?") or t.lower().startswith(("why ", "how ", "what ", "opinion", "the case for")):
+        score -= 2             # explainers / opinion
+    return score
+
+
 
 def _prompt(cands):
     secs = "\n".join(f'- "{s["slug"]}" ({s["name"]}): {s["brief"]}' for s in config.SECTIONS)
@@ -54,14 +87,14 @@ def _shorten_title(t):
 def curate(cands):
     """Return (stories, top_urls, generated_by)."""
     by_id = {c["id"]: c for c in cands}
-    # keep the prompt a sensible size: newest first per section
+    # keep the prompt a sensible size: most relevant + newest first per section
     trimmed = []
     for s in config.SECTIONS:
         sec = [c for c in cands if c["category"] == s["slug"]]
-        sec.sort(key=lambda c: (c["via"] != "feed", c["published"]), reverse=False)
-        feeds = sorted([c for c in sec if c["via"] == "feed"], key=lambda c: c["published"], reverse=True)
-        gn = sorted([c for c in sec if c["via"] != "feed"], key=lambda c: c["published"], reverse=True)
-        trimmed += (feeds + gn)[:PER_SECTION_CANDIDATES]
+        scored = [(relevance(c), c) for c in sec]
+        scored = [x for x in scored if x[0] > -50]
+        scored.sort(key=lambda x: (x[0], x[1]["published"]), reverse=True)
+        trimmed += [c for _, c in scored][:PER_SECTION_CANDIDATES]
 
     if ai.available() and trimmed:
         log(f"AI curation over {len(trimmed)} candidates ({ai.model()})...")

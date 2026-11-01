@@ -84,7 +84,8 @@ def ask_json(prompt, max_tokens=4096, temperature=0.3):
             _models.pop(0)
             attempts -= 1
             continue
-        if r.status_code == 400 and _send_thinking_off and "thinking" in _err_msg(r).lower():
+        if r.status_code == 400 and _send_thinking_off:
+            log(f"  AI 400 with thinking off ({_err_msg(r)}); retrying without that setting")
             _send_thinking_off = False    # this model can't turn thinking off; resend without it
             attempts -= 1
             continue
