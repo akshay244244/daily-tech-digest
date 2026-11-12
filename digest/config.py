@@ -114,8 +114,11 @@ GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD", "").replace(" ", "").s
 EMAIL_TO = os.environ.get("EMAIL_TO", "").strip() or GMAIL_USER
 
 
+DEFAULT_SITE_URL = "https://techdail.vercel.app/"
+
+
 def site_url():
-    explicit = os.environ.get("SITE_URL", "").strip()
+    explicit = os.environ.get("SITE_URL", "").strip() or DEFAULT_SITE_URL
     if explicit:
         return explicit.rstrip("/") + "/"
     repo = os.environ.get("GITHUB_REPOSITORY", "")

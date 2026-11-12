@@ -20,6 +20,7 @@
   const addDays = (d, n) => { const x = parseD(d); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
   const relDay = (d) => { const t = istToday(); if (d === t) return "Today"; if (d === addDays(t, -1)) return "Yesterday"; return parseD(d).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" }); };
   const pad = (n) => String(n).padStart(2, "0");
+  const tidy = (t) => String(t || "").replace(/\s+([.,;:!?%)\]’”])/g, "$1").replace(/([(\[“‘])\s+/g, "$1");
   const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const bust = () => "?t=" + Math.floor(Date.now() / 60000);
 
@@ -110,7 +111,7 @@
     const dg = S.digests[t] || (latest && S.digests[latest]);
     if (!dg) {
       app.innerHTML = `<section class="hero"><div class="kicker">Latest edition</div><h1>${esc(fmtLong(t))}</h1></section>` +
-        empty("No edition yet", "The first digest hasn't been generated. Run the <b>Daily Tech Digest</b> workflow (task: backfill) on GitHub, then reload.") + stylePicker();
+        empty("Today's edition is on its way", "A fresh digest is published every morning at 06:30 IST. Please check back in a little while.") + stylePicker();
       return;
     }
     const isToday = dg.date === t;
@@ -176,7 +177,7 @@
     }).join("");
     const i = S.idx.dates.findIndex((r) => r.date === date);
     const prev = S.idx.dates[i + 1], next = S.idx.dates[i - 1];
-    app.innerHTML = `<div class="kicker">Digest · ${stories.length} stories${dg.generated_by === "fallback" ? " · unranked (AI off)" : ""}</div>
+    app.innerHTML = `<div class="kicker">Digest · ${stories.length} stories</div>
       <h1 class="page-title">${esc(fmtLong(date))}</h1>
       <div class="pills">${prev ? `<a class="pill" href="#/digest/${prev.date}">← ${esc(fmtShort(prev.date))}</a>` : ""}${next && i > 0 ? `<a class="pill" href="#/digest/${next.date}">${esc(fmtShort(next.date))} →</a>` : ""}</div>
       ${blocks}`;
@@ -221,9 +222,9 @@
     scored.forEach(({ s }) => { if (!seen.has(s.url)) { seen.add(s.url); hits.push(s); } });
     const top = hits.slice(0, 12);
     const answer = top.length
-      ? `<div class="answer surface"><div class="kicker">Answer · from your digests</div>
+      ? `<div class="answer surface"><div class="kicker">Answer · from past digests</div>
           <ul>${top.slice(0, 5).map((s) => `<li><b>${esc(s.summary)}</b> <span class="note">— ${esc(s.source)}, ${esc(fmtShort(s.date))}</span></li>`).join("")}</ul>
-          <p class="note" style="margin:10px 0 0">Keyword match over past headlines (no AI on this free site).</p></div>`
+          <p class="note" style="margin:10px 0 0">Matched against every headline from past editions.</p></div>`
       : `<div class="answer surface"><div class="kicker">No match</div>Nothing in past digests matched that. Try a company or product name.</div>`;
     $("#results").innerHTML = answer + `<div class="section-head" style="margin-top:10px"><h2>Matching stories</h2><span class="kicker">Searched ${all.length} stories</span></div>
       <div class="story-grid">${top.map((s, i) => storyCard(s, i + 1, i)).join("")}</div>`;
@@ -248,7 +249,7 @@
     const r = await getJSON("recap.json", true);
     if (!r || !r.items || !r.items.length) {
       app.innerHTML = `<div class="kicker">Weekly recap</div><h1 class="page-title">This week</h1>` +
-        empty("No recap yet", "The recap is built every Sunday at 18:30 IST. You can also run the workflow with task <b>recap</b> on GitHub.");
+        empty("No recap yet", "The weekly recap is published every Sunday at 18:30 IST.");
       return;
     }
     const blocks = S.sections.map((sec) => {
@@ -316,7 +317,7 @@
     const lv = store.raw("dtd-quiz-level") || "medium";
     const chosen = new Set(store.get("dtd-quiz-secs", []));
     app.innerHTML = `<div class="kicker">Quiz · last 7 days</div><h1 class="page-title">Rapid-fire news quiz</h1>
-      <p class="lede">10 questions · 20 seconds each · press 1–4 to answer.</p>
+      <p class="lede">10 questions · 20 seconds each · tap an answer (or press 1–4).</p>
       <div class="quiz-card surface">
         <div class="kicker">Difficulty</div>
         <div class="opt-row levels">${Object.entries(LEVELS).map(([k, [n, d]]) => `<button type="button" class="choice ${k === lv ? "sel" : ""}" data-level="${k}"><span><b>${n}</b><small>${d}</small></span></button>`).join("")}</div>
@@ -420,7 +421,7 @@
     const d = (s.id && (await getJSON("stories/" + s.id + ".json"))) || { detailed: [], sentences: [] };
     const sents = d.sentences || [];
     const sum = (d.detailed || []).length
-      ? `<h4>${d.detail_kind === "ai" ? "Detailed summary" : "Extractive summary · key sentences from the article"}</h4><ul class="sum">${d.detailed.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`
+      ? `<h4>${d.detail_kind === "ai" ? "Detailed summary" : "Extractive summary · key sentences from the article"}</h4><ul class="sum">${d.detailed.map((x) => `<li>${esc(tidy(x))}</li>`).join("")}</ul>`
       : `<h4>Summary</h4><p class="note">The article text couldn't be fetched (it may be paywalled). Open the original to read it.</p>`;
     $("#pd").innerHTML = sum + `<h4>Ask about this story</h4>
       <div class="chips">${["What are the key numbers here?", "Who does this compete with?", "What does this mean for product teams?"].map((c) => `<button type="button" data-ask="${esc(c)}">${esc(c)}</button>`).join("")}</div>
@@ -448,7 +449,7 @@
     else { const qt = tokens(q).map(stem); scoreFn = (x) => { const h = tokens(x).map(stem); return qt.reduce((a, w) => a + (h.includes(w) ? (w.length > 3 ? 2 : 1) : 0), 0); }; }
     const ranked = sents.map((x, i) => ({ x, i, sc: scoreFn(x) })).filter((r) => r.sc > 0).sort((a, b) => b.sc - a.sc).slice(0, 3).sort((a, b) => a.i - b.i);
     if (!ranked.length) return "The article doesn't seem to say anything about that.";
-    return `From the article:<ul>${ranked.map((r) => `<li>${esc(r.x)}</li>`).join("")}</ul>`;
+    return `From the article:<ul>${ranked.map((r) => `<li>${esc(tidy(r.x))}</li>`).join("")}</ul>`;
   }
   function closePanel() {
     if (!panel.classList.contains("open")) return;

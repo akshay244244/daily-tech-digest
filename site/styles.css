@@ -51,7 +51,8 @@ img { display: block; max-width: 100%; }
 button { font: inherit; color: inherit; }
 .wrap { width: 100%; max-width: 72rem; margin: 0 auto; padding: 0 16px; }
 @media (min-width: 768px) { .wrap { padding: 0 28px; } }
-main { flex: 1; padding-top: 28px; padding-bottom: 48px; outline: none; }
+main { flex: 1; outline: none; }
+main.wrap { padding-top: 28px; padding-bottom: 48px; }
 h1, h2, h3 { font-family: var(--font-head); font-weight: var(--head-weight); line-height: 1.15; margin: 0; letter-spacing: -.01em; }
 .mono { font-family: var(--font-mono); }
 .kicker { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-fg); }

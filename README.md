@@ -72,7 +72,7 @@ Website (site/)  →  sirf JSON padhti hai, isliye turant load hoti hai
 ```
 
 ## Free version ki limits (jaan lo)
-- **Refresh now** button public visitors ko nahi dikhta. Apne browser mein ek baar `https://akshay244244.github.io/daily-tech-digest/?owner=1` kholo — us browser mein button dikhne lagega (band karne ke liye `?owner=0`). Button GitHub ka workflow page kholta hai, wahan "Run workflow" dabao; site 3–5 min mein khud update ho jaati hai.
+- **Refresh now** button public visitors ko nahi dikhta. Apne browser mein ek baar `https://techdail.vercel.app/?owner=1` kholo — us browser mein button dikhne lagega (band karne ke liye `?owner=0`). Button GitHub ka workflow page kholta hai, wahan "Run workflow" dabao; site 3–5 min mein khud update ho jaati hai.
 - `site/` mein design ka koi change push karo to site apne aap redeploy hoti hai (naya digest nahi banta). Manually: Run workflow → task **deploy**.
 - GitHub ka schedule kabhi kabhi **5–30 min late** chalta hai.
 - **Saved** stories isi browser mein save hoti hain (phone aur laptop alag).

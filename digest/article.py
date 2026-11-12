@@ -73,6 +73,7 @@ def fetch_article(url):
         paras = []
         for p in root.find_all("p"):
             t = re.sub(r"\s+", " ", p.get_text(" ", strip=True))
+            t = re.sub(r"\s+([.,;:!?%)\]])", r"\1", t)
             if len(t) >= 60 and not re.search(r"(cookie|subscribe|sign up|newsletter|all rights reserved|©)", t, re.I):
                 paras.append(t)
         text = "\n".join(paras)[:12000]
