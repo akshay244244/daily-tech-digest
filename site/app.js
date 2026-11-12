@@ -132,6 +132,7 @@
       <section class="hero rise">
         <div class="kicker">${isToday ? "Today's edition" : "Latest edition"} · ${stories.length} stories</div>
         <h1>${esc(fmtLong(dg.date))}</h1>
+        <p class="intro">The day's most important tech stories, picked and summarised by AI across <b>5&nbsp;sections</b>. Fresh every morning at 06:30&nbsp;IST · no&nbsp;sign-up · no&nbsp;ads.</p>
       </section>
       <div class="section-head"><h2>Today's top 5</h2><a class="link-out" href="#/digest/${dg.date}">Full digest →</a></div>
       <div class="top-grid">${top.map((s, i) => { const k = reg(s); return `

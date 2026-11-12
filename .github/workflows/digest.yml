@@ -5,12 +5,15 @@ on:
     - cron: "0 1 * * *"     # 06:30 IST every day  -> daily digest + email
     - cron: "30 3 * * *"    # 09:00 IST every day  -> catch-up if 06:30 run was missed
     - cron: "0 13 * * 0"    # 18:30 IST on Sunday  -> weekly recap + email
+  push:
+    branches: [main]
+    paths: ["site/**", "!site/data/**"]   # design changes -> redeploy only
   workflow_dispatch:
     inputs:
       task:
         description: "What to run"
         type: choice
-        options: [daily, recap, backfill]
+        options: [daily, recap, backfill, deploy]
         default: daily
       send_email:
         description: "Send the email"
@@ -54,8 +57,11 @@ jobs:
       - name: Pick the task
         id: pick
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TASK="index"; TRIGGER="push"; EMAIL=""
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             TASK="${{ inputs.task }}"
+            [ "$TASK" = "deploy" ] && TASK="index"
             TRIGGER="manual"
             if [ "${{ inputs.send_email }}" = "true" ]; then EMAIL=""; else EMAIL="--no-email"; fi
           else

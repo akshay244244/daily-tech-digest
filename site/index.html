@@ -4,7 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Daily Tech Digest</title>
-<meta name="description" content="A personal daily tech digest for a product manager.">
+<meta name="description" content="A free, AI-curated tech briefing every morning: Frontier AI, Global Tech, India Startups, Product Craft and Creative Tools. No sign-up, no ads.">
+<meta name="theme-color" content="#0F52BA">
+<link rel="canonical" href="https://akshay244244.github.io/daily-tech-digest/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Daily Tech Digest">
+<meta property="og:title" content="Daily Tech Digest — today's tech news in 5 minutes">
+<meta property="og:description" content="A free, AI-curated tech briefing every morning: Frontier AI, Global Tech, India Startups, Product Craft and Creative Tools. No sign-up, no ads.">
+<meta property="og:url" content="https://akshay244244.github.io/daily-tech-digest/">
+<meta property="og:image" content="https://akshay244244.github.io/daily-tech-digest/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Daily Tech Digest: five sections of tech news, refreshed daily at 06:30 IST">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Daily Tech Digest — today's tech news in 5 minutes">
+<meta name="twitter:description" content="A free, AI-curated tech briefing every morning: Frontier AI, Global Tech, India Startups, Product Craft and Creative Tools. No sign-up, no ads.">
+<meta name="twitter:image" content="https://akshay244244.github.io/daily-tech-digest/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F52BA'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' font-weight='700' fill='white' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
 <script>
 /* Apply saved style + theme BEFORE first paint (no flash) */
@@ -15,6 +30,14 @@
     pop: "Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600",
     brutal: "Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600"
   };
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.has("owner")) {
+      if (q.get("owner") === "0") localStorage.removeItem("dtd-owner"); else localStorage.setItem("dtd-owner", "1");
+      history.replaceState(null, "", location.pathname + location.hash);
+    }
+    if (localStorage.getItem("dtd-owner") === "1") document.documentElement.setAttribute("data-owner", "");
+  } catch (e) {}
   var s = "classic", t = null;
   try { s = localStorage.getItem("dtd-style") || "classic"; t = localStorage.getItem("dtd-theme"); } catch (e) {}
   if (!FONTS[s]) s = "classic";
@@ -61,7 +84,7 @@
 <main id="app" class="wrap" tabindex="-1"></main>
 
 <footer class="site-footer wrap">
-  Refreshed daily at 06:30 IST · Ranked by AI for a tech PM · Public RSS &amp; Google News · No ads
+  Refreshed daily at 06:30 IST · Curated by AI · Public RSS &amp; Google News · No ads
 </footer>
 
 <aside class="panel" id="panel" aria-hidden="true" role="dialog" aria-label="Story details">

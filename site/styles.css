@@ -121,6 +121,7 @@ h1, h2, h3 { font-family: var(--font-head); font-weight: var(--head-weight); lin
 :root[data-style="brutal"] .btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #0A0A0A; }
 :root[data-style="brutal"] .btn-primary, :root[data-style="brutal"] .btn-refresh { background: var(--yellow); color: #0A0A0A; }
 :root[data-style="pop"] .btn-refresh { background: #F43F6B; color: #fff; border-color: transparent; }
+:root:not([data-owner]) .btn-refresh { display: none; }
 .btn-refresh:hover .ico-spin { transform: rotate(-120deg); }
 .ico-spin { transition: transform .5s ease; }
 .btn[disabled] { opacity: .55; cursor: not-allowed; }
@@ -148,7 +149,7 @@ h1, h2, h3 { font-family: var(--font-head); font-weight: var(--head-weight); lin
 @keyframes prog { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
 
 /* ============ Hero / headings ============ */
-.hero { margin: 8px 0 34px; }
+.hero { margin: 14px 0 34px; }
 .hero h1 { font-size: clamp(32px, 6.4vw, 60px); margin-top: 10px; }
 :root[data-style="pop"] .hero h1 {
   background: linear-gradient(90deg, #F43F6B, #FB923C 50%, #06B6D4); -webkit-background-clip: text;
@@ -397,3 +398,7 @@ h1, h2, h3 { font-family: var(--font-head); font-weight: var(--head-weight); lin
 }
 .skeleton { height: 240px; border-radius: var(--radius); background: linear-gradient(90deg, var(--muted), var(--card), var(--muted)); background-size: 200% 100%; animation: sk 1.2s infinite; }
 @keyframes sk { to { background-position: -200% 0; } }
+
+/* ============ Public intro ============ */
+.hero .intro { margin: 14px 0 0; max-width: 44rem; color: var(--muted-fg); font-size: 16.5px; line-height: 1.55; }
+.hero .intro b { color: var(--fg); font-weight: 600; }
