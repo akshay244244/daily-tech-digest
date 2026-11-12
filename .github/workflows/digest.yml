@@ -93,6 +93,16 @@ jobs:
             git push
           fi
 
+      - name: Update the Vercel site
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK" ]; then
+            curl -fsS -X POST "$VERCEL_DEPLOY_HOOK" > /dev/null && echo "Vercel deploy triggered" || echo "Vercel hook failed (site will still update on the next push)"
+          else
+            echo "No VERCEL_DEPLOY_HOOK secret set, skipping"
+          fi
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
